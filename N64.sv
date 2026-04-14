@@ -793,16 +793,16 @@ n64top
    .pifrom_wrdata     (pifrom_wrdata   ),
    .pifrom_wren       (pifrom_wren     ),
                       
-   // RDRAM           
-   .ddr3_BUSY         (DDRAM_BUSY      ),
-   .ddr3_BURSTCNT     (DDRAM_BURSTCNT  ),
-   .ddr3_ADDR         (DDRAM_ADDR      ),
-   .ddr3_DOUT         (DDRAM_DOUT      ),
-   .ddr3_DOUT_READY   (DDRAM_DOUT_READY),
-   .ddr3_RD           (DDRAM_RD        ),
-   .ddr3_DIN          (DDRAM_DIN       ),
-   .ddr3_BE           (DDRAM_BE        ),
-   .ddr3_WE           (DDRAM_WE        ),
+   // RDRAM (via RA arbiter)           
+   .ddr3_BUSY         (n64_ddram_busy      ),
+   .ddr3_BURSTCNT     (n64_ddram_burstcnt  ),
+   .ddr3_ADDR         (n64_ddram_addr      ),
+   .ddr3_DOUT         (n64_ddram_dout      ),
+   .ddr3_DOUT_READY   (n64_ddram_dout_ready),
+   .ddr3_RD           (n64_ddram_rd        ),
+   .ddr3_DIN          (n64_ddram_din       ),
+   .ddr3_BE           (n64_ddram_be        ),
+   .ddr3_WE           (n64_ddram_we        ),
                       
    // ROM+SRAM+FLASH  
    .cartAvailable     (cart_loaded       ),
@@ -911,6 +911,92 @@ n64top
    .video_FB_base    (video_FB_base),
    .video_FB_sizeX   (video_FB_sizeX),
    .video_FB_sizeY   (video_FB_sizeY)
+);
+
+////////////////////////////  RETROACHIEVEMENTS  ////////////////////////
+
+// Intermediate DDRAM signals for N64 core (n64top)
+wire        n64_ddram_busy;
+wire  [7:0] n64_ddram_burstcnt;
+wire [28:0] n64_ddram_addr;
+wire [63:0] n64_ddram_dout;
+wire        n64_ddram_dout_ready;
+wire        n64_ddram_rd;
+wire [63:0] n64_ddram_din;
+wire  [7:0] n64_ddram_be;
+wire        n64_ddram_we;
+
+// RA DDRAM signals
+wire [28:0] ra_ddram_wr_addr;
+wire [63:0] ra_ddram_wr_din;
+wire  [7:0] ra_ddram_wr_be;
+wire        ra_ddram_wr_req;
+wire        ra_ddram_wr_ack;
+wire [28:0] ra_ddram_rd_addr;
+wire        ra_ddram_rd_req;
+wire        ra_ddram_rd_ack;
+wire [63:0] ra_ddram_rd_dout;
+
+// RA status
+wire        ra_active;
+wire [31:0] ra_dbg_frame;
+
+// DDRAM arbiter: N64 core + RA -> physical DDRAM
+ddram_arb_n64 ddram_arb (
+	.clk            (clk_2x),
+	.reset          (reset_or),
+
+	.PHY_BUSY       (DDRAM_BUSY),
+	.PHY_BURSTCNT   (DDRAM_BURSTCNT),
+	.PHY_ADDR       (DDRAM_ADDR),
+	.PHY_DOUT       (DDRAM_DOUT),
+	.PHY_DOUT_READY (DDRAM_DOUT_READY),
+	.PHY_RD         (DDRAM_RD),
+	.PHY_DIN        (DDRAM_DIN),
+	.PHY_BE         (DDRAM_BE),
+	.PHY_WE         (DDRAM_WE),
+
+	.N64_BUSY       (n64_ddram_busy),
+	.N64_BURSTCNT   (n64_ddram_burstcnt),
+	.N64_ADDR       (n64_ddram_addr),
+	.N64_DOUT       (n64_ddram_dout),
+	.N64_DOUT_READY (n64_ddram_dout_ready),
+	.N64_RD         (n64_ddram_rd),
+	.N64_DIN        (n64_ddram_din),
+	.N64_BE         (n64_ddram_be),
+	.N64_WE         (n64_ddram_we),
+
+	.ra_wr_addr     (ra_ddram_wr_addr),
+	.ra_wr_din      (ra_ddram_wr_din),
+	.ra_wr_be       (ra_ddram_wr_be),
+	.ra_wr_req      (ra_ddram_wr_req),
+	.ra_wr_ack      (ra_ddram_wr_ack),
+
+	.ra_rd_addr     (ra_ddram_rd_addr),
+	.ra_rd_req      (ra_ddram_rd_req),
+	.ra_rd_ack      (ra_ddram_rd_ack),
+	.ra_rd_dout     (ra_ddram_rd_dout)
+);
+
+// RetroAchievements RAM mirror (reads RDRAM directly from DDRAM)
+ra_ram_mirror_n64 ra_mirror (
+	.clk             (clk_1x),
+	.reset           (reset_or),
+	.vblank          (VBlank),
+
+	.ddram_wr_addr   (ra_ddram_wr_addr),
+	.ddram_wr_din    (ra_ddram_wr_din),
+	.ddram_wr_be     (ra_ddram_wr_be),
+	.ddram_wr_req    (ra_ddram_wr_req),
+	.ddram_wr_ack    (ra_ddram_wr_ack),
+
+	.ddram_rd_addr   (ra_ddram_rd_addr),
+	.ddram_rd_req    (ra_ddram_rd_req),
+	.ddram_rd_ack    (ra_ddram_rd_ack),
+	.ddram_rd_dout   (ra_ddram_rd_dout),
+
+	.active          (ra_active),
+	.dbg_frame_counter(ra_dbg_frame)
 );
 
 assign CLK_VIDEO = clk_vid;

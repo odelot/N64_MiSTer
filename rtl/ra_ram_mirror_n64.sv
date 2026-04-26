@@ -127,7 +127,7 @@ always @(posedge clk) begin
 				active <= 1'b1;
 				// Write header with busy=1 to signal frame start
 				ddram_wr_addr <= DDRAM_BASE;
-				ddram_wr_din  <= {16'd0, 8'h01, 8'd0, 32'h52414348};
+				ddram_wr_din  <= {16'h0100, 8'h01, 8'd0, 32'h52414348};
 				ddram_wr_be   <= 8'hFF;
 				ddram_wr_req  <= ~ddram_wr_req;
 				return_state  <= S_WR_HDR0;
@@ -144,7 +144,7 @@ always @(posedge clk) begin
 		// Write header with busy=0 (frame processing done)
 		S_WR_HDR0: begin
 			ddram_wr_addr <= DDRAM_BASE;
-			ddram_wr_din  <= {16'd0, 8'h00, 8'd0, 32'h52414348};
+			ddram_wr_din  <= {16'h0100, 8'h00, 8'd0, 32'h52414348};
 			ddram_wr_be   <= 8'hFF;
 			ddram_wr_req  <= ~ddram_wr_req;
 			return_state  <= S_WR_HDR1;

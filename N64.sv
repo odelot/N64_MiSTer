@@ -296,8 +296,8 @@ parameter CONF_STR = {
    "FS1,N64z64n64v64,Load,32000000;",
    "F2,GBCGB ,Load GB-Transfer;",
    "-;",
-   "C,Cheats;",
-   "O[103],Cheats Enabled,Yes,No;",
+   "H2C,Cheats;",
+   "H2O[103],Cheats Enabled,Yes,No;",
    "-;",
 	"R[40],Reload Backup RAM;",
 	"R[41],Save Backup RAM;",
@@ -423,10 +423,11 @@ wire [2:0]  ps2_kbd_led_use = 3'b011;
 
 wire        fixed_blanks_off = status[82];
 wire        clean_hdmi = status[105];
+wire        hardcore = status[107];
 wire        video_FB_en;
 
 wire [127:0] status_in = {status[127:40],ss_slot,status[37:0]};
-wire [15:0] status_menumask = {14'd0, clean_hdmi, fixed_blanks_off};
+wire [15:0] status_menumask = {13'd0, hardcore, clean_hdmi, fixed_blanks_off};
 
 wire DIRECT_VIDEO;
 
@@ -666,7 +667,8 @@ savestate_ui savestate_ui
 (
 	.clk            (clk_1x        ),
 	.ps2_key        (ps2_key[10:0] ),
-	.allow_ss       (cart_loaded   ),
+	.allow_ss       (cart_loaded & ~hardcore),
+	.allow_save     (cart_loaded),
 	//.joySS          (joy_unmod[14] ),
 	.joySS          (0             ),
 	.joyRight       (joy_unmod[0]  ),

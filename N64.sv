@@ -910,10 +910,13 @@ n64top
    .video_FB_en      (video_FB_en),
    .video_FB_base    (video_FB_base),
    .video_FB_sizeX   (video_FB_sizeX),
-   .video_FB_sizeY   (video_FB_sizeY)
+   .video_FB_sizeY   (video_FB_sizeY),
+   .vi_irq           (vi_irq)
 );
 
 ////////////////////////////  RETROACHIEVEMENTS  ////////////////////////
+
+wire vi_irq;  // VI interrupt from n64top (reliable VBlank signal)
 
 // Intermediate DDRAM signals for N64 core (n64top)
 wire        n64_ddram_busy;
@@ -982,7 +985,7 @@ ddram_arb_n64 ddram_arb (
 ra_ram_mirror_n64 ra_mirror (
 	.clk             (clk_1x),
 	.reset           (reset_or),
-	.vblank          (VBlank),
+	.vblank          (vi_irq),  // Use VI interrupt instead of video_vblank
 
 	.ddram_wr_addr   (ra_ddram_wr_addr),
 	.ddram_wr_din    (ra_ddram_wr_din),

@@ -193,7 +193,11 @@ entity n64top is
       video_FB_en             : out std_logic;
       video_FB_base           : out unsigned(31 downto 0);
       video_FB_sizeX          : out unsigned(9 downto 0);
-      video_FB_sizeY          : out unsigned(9 downto 0)
+      video_FB_sizeY          : out unsigned(9 downto 0);
+       
+      -- VI interrupt (fires when VI_CURRENT matches VI_INTR register)
+      -- Used by RetroAchievements as a reliable VBlank signal
+      vi_irq                  : out std_logic := '0'
    );
 end entity;
 
@@ -538,6 +542,9 @@ architecture arch of n64top is
 -- synthesis translate_on
    
 begin 
+
+   -- Expose VI interrupt for RetroAchievements VBlank detection
+   vi_irq <= irqVector(3);
 
    -- clock index
    process (clk1x)
